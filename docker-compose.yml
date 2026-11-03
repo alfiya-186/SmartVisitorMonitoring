@@ -1,0 +1,41 @@
+
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: visitor_database
+    environment:
+      POSTGRES_DB: visitor_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: visitor123
+    volumes:
+      - visitor_data:/var/lib/postgresql/data
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    restart: unless-stopped
+
+  backend:
+    build: ./backend
+    container_name: visitor_backend
+    ports:
+      - "5000:5000"
+    environment:
+      DB_HOST: db
+      DB_NAME: visitor_db
+      DB_USER: postgres
+      DB_PASSWORD: visitor123
+    depends_on:
+      - db
+    restart: unless-stopped
+
+  dashboard:
+    image: nginx:alpine
+    container_name: visitor_dashboard
+    ports:
+      - "8080:80"
+    volumes:
+      - ./dashboard:/usr/share/nginx/html:ro
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+volumes:
+  visitor_data:

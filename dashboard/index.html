@@ -1,0 +1,202 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Smart Visitor Monitoring System</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: #f1f5f9;
+            margin: 0;
+            padding: 30px 20px;
+            color: #1e293b;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 35px;
+        }
+
+        header h1 {
+            color: #166534;
+            margin-bottom: 10px;
+        }
+
+        header p {
+            color: #64748b;
+        }
+
+        .dashboard {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            max-width: 1000px;
+            margin: auto;
+        }
+
+        .card {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.06);
+        }
+
+        .card h3 {
+            color: #475569;
+            font-size: 17px;
+            margin-bottom: 15px;
+        }
+
+        .value {
+            font-size: 38px;
+            font-weight: bold;
+            color: #15803d;
+        }
+
+        .sensor-value {
+            font-size: 25px;
+        }
+
+        .sensor-status {
+            margin-top: 12px;
+            font-weight: bold;
+        }
+
+        .connection {
+            text-align: center;
+            margin-top: 30px;
+            font-weight: bold;
+        }
+
+        .connected {
+            color: #15803d;
+        }
+
+        .disconnected {
+            color: #dc2626;
+        }
+
+        .footer {
+            text-align: center;
+            color: #94a3b8;
+            margin-top: 35px;
+            font-size: 13px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+        <h1>Smart Visitor Monitoring System</h1>
+        <p>Real-Time Visitor Entry and Exit Monitoring</p>
+    </header>
+
+    <main class="dashboard">
+
+        <div class="card">
+            <h3>Total Entries</h3>
+            <div class="value" id="entry">0</div>
+        </div>
+
+        <div class="card">
+            <h3>Total Exits</h3>
+            <div class="value" id="exit">0</div>
+        </div>
+
+        <div class="card">
+            <h3>People Inside</h3>
+            <div class="value" id="inside">0</div>
+        </div>
+
+        <div class="card">
+            <h3>IR Sensor A</h3>
+            <div class="value sensor-value" id="sensorA">--</div>
+            <div class="sensor-status" id="sensorAStatus">Waiting</div>
+        </div>
+
+        <div class="card">
+            <h3>IR Sensor B</h3>
+            <div class="value sensor-value" id="sensorB">--</div>
+            <div class="sensor-status" id="sensorBStatus">Waiting</div>
+        </div>
+
+    </main>
+
+    <div class="connection" id="connectionStatus">
+        Connecting to backend...
+    </div>
+
+    <div class="footer">
+        Smart Visitor Monitoring System | ESP32 and IR Sensors
+    </div>
+
+    <script>
+        const API_URL = "http://localhost:5000/api/latest";
+
+        async function updateDashboard() {
+
+            const status = document.getElementById("connectionStatus");
+
+            try {
+
+                const response = await fetch(API_URL);
+
+                if (!response.ok) {
+                    throw new Error("No readings available");
+                }
+
+                const data = await response.json();
+
+                document.getElementById("entry").textContent =
+                    data.entry_count;
+
+                document.getElementById("exit").textContent =
+                    data.exit_count;
+
+                document.getElementById("inside").textContent =
+                    data.people_inside;
+
+                document.getElementById("sensorA").textContent =
+                    data.sensor_a;
+
+                document.getElementById("sensorB").textContent =
+                    data.sensor_b;
+
+                document.getElementById("sensorAStatus").textContent =
+                    Number(data.sensor_a) === 1 ? "Detected" : "Clear";
+
+                document.getElementById("sensorBStatus").textContent =
+                    Number(data.sensor_b) === 1 ? "Detected" : "Clear";
+
+                status.textContent =
+                    "Connected to backend | Last updated: " +
+                    new Date(data.created_at).toLocaleString();
+
+                status.className = "connection connected";
+
+            } catch (error) {
+
+                status.textContent =
+                    "Waiting for backend or visitor readings...";
+
+                status.className = "connection disconnected";
+            }
+        }
+
+        updateDashboard();
+
+        setInterval(updateDashboard, 2000);
+    </script>
+
+</body>
+</html>
