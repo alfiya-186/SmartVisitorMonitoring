@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -85,6 +84,29 @@
             color: #dc2626;
         }
 
+        .api-config {
+            text-align: center;
+            margin-top: 12px;
+            font-size: 13px;
+            color: #64748b;
+        }
+
+        .api-config button {
+            margin-left: 8px;
+            padding: 3px 10px;
+            font-size: 12px;
+            cursor: pointer;
+            border-radius: 4px;
+            border: 1px solid #cbd5e1;
+            background: #ffffff;
+            color: #334155;
+            transition: background 0.2s;
+        }
+
+        .api-config button:hover {
+            background: #e2e8f0;
+        }
+
         .footer {
             text-align: center;
             color: #94a3b8;
@@ -136,20 +158,57 @@
         Connecting to backend...
     </div>
 
+    <div class="api-config">
+        <span>Backend API: <strong id="currentApiDisplay">...</strong></span>
+        <button type="button" onclick="changeApiUrl()">Change</button>
+    </div>
+
     <div class="footer">
         Smart Visitor Monitoring System | ESP32 and IR Sensors
     </div>
 
     <script>
-        const API_URL = "http://localhost:5000/api/latest";
+        function getBaseApiUrl() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const queryApi = urlParams.get('api');
+            if (queryApi) {
+                localStorage.setItem('visitor_api_url', queryApi);
+                return queryApi.replace(/\/$/, "");
+            }
+            const stored = localStorage.getItem('visitor_api_url');
+            if (stored) {
+                return stored.replace(/\/$/, "");
+            }
+            if (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") {
+                return "http://localhost:5000";
+            }
+            return "https://visitor-backend.onrender.com";
+        }
+
+        let baseApi = getBaseApiUrl();
+
+        function updateApiDisplay() {
+            const display = document.getElementById("currentApiDisplay");
+            if (display) display.textContent = baseApi;
+        }
+
+        function changeApiUrl() {
+            const newUrl = prompt("Enter backend API base URL (e.g. https://visitor-backend.onrender.com or http://localhost:5000):", baseApi);
+            if (newUrl !== null && newUrl.trim() !== "") {
+                baseApi = newUrl.trim().replace(/\/$/, "");
+                localStorage.setItem('visitor_api_url', baseApi);
+                updateApiDisplay();
+                updateDashboard();
+            }
+        }
+
+        updateApiDisplay();
 
         async function updateDashboard() {
-
             const status = document.getElementById("connectionStatus");
 
             try {
-
-                const response = await fetch(API_URL);
+                const response = await fetch(`${baseApi}/api/latest`);
 
                 if (!response.ok) {
                     throw new Error("No readings available");
@@ -185,7 +244,6 @@
                 status.className = "connection connected";
 
             } catch (error) {
-
                 status.textContent =
                     "Waiting for backend or visitor readings...";
 
@@ -194,7 +252,6 @@
         }
 
         updateDashboard();
-
         setInterval(updateDashboard, 2000);
     </script>
 

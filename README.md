@@ -51,13 +51,34 @@ SmartVisitorMonitoring/
 ├── database/
 │   └── init.sql           # Database schema & table initialization script
 ├── docker-compose.yml     # Multi-container service definitions
+├── render.yaml            # Render Blueprint Infrastructure-as-Code
 ├── .gitignore             # Git ignore configuration
 └── README.md              # Project documentation
 ```
 
 ---
 
-## 🚀 Getting Started
+## ☁️ Deploy to Render (Blueprint)
+
+This repository includes a [`render.yaml`](render.yaml) blueprint specification that automatically provisions:
+1. **Managed PostgreSQL Database** (`visitor-db`)
+2. **Flask Web Service** (`visitor-backend`) connected automatically via `DATABASE_URL`
+3. **Static Dashboard Site** (`visitor-dashboard`)
+
+### 1-Click Setup on Render:
+1. Go to your [Render Dashboard](https://dashboard.render.com/).
+2. Click **New +** > **Blueprint**.
+3. Connect and select the repository: `alfiya-186/SmartVisitorMonitoring`.
+4. Render will detect `render.yaml` and display the resources to create.
+5. Click **Apply**.
+6. Once deployed:
+   - Your backend will be live at `https://visitor-backend.onrender.com` (or your assigned subdomain).
+   - Your dashboard will be live at `https://visitor-dashboard.onrender.com`.
+   - On the dashboard, verify the Backend API URL or update it via the **Change** button if needed.
+
+---
+
+## 🚀 Getting Started Locally
 
 ### Prerequisites
 
@@ -187,3 +208,4 @@ The dashboard automatically refreshes every 2 seconds and displays:
 ## 👤 Author
 
 - **alfiya-186** - [GitHub Profile](https://github.com/alfiya-186)
+

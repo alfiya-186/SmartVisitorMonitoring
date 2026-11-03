@@ -1,4 +1,3 @@
-
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 import psycopg2
@@ -8,13 +7,40 @@ app = Flask(__name__)
 CORS(app)
 
 def get_db_connection():
+    db_url = os.getenv("DATABASE_URL")
+    if db_url:
+        return psycopg2.connect(db_url)
     return psycopg2.connect(
         host=os.getenv("DB_HOST", "db"),
         database=os.getenv("DB_NAME", "visitor_db"),
         user=os.getenv("DB_USER", "postgres"),
         password=os.getenv("DB_PASSWORD", "visitor123"),
-        port=5432
+        port=int(os.getenv("DB_PORT", 5432))
     )
+
+def init_db():
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor()
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS visitor_readings (
+                id SERIAL PRIMARY KEY,
+                entry_count INTEGER NOT NULL DEFAULT 0,
+                exit_count INTEGER NOT NULL DEFAULT 0,
+                people_inside INTEGER NOT NULL DEFAULT 0,
+                sensor_a INTEGER NOT NULL DEFAULT 0,
+                sensor_b INTEGER NOT NULL DEFAULT 0,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+        """)
+        conn.commit()
+        cur.close()
+        conn.close()
+        print("Database initialized successfully.")
+    except Exception as e:
+        print(f"Database initialization note: {e}")
+
+init_db()
 
 @app.route("/")
 def home():
@@ -99,4 +125,5 @@ def latest_reading():
         return jsonify({"error": str(e)}), 500
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000)
+    port = int(os.getenv("PORT", 5000))
+    app.run(host="0.0.0.0", port=port)
